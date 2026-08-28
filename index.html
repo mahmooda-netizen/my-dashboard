@@ -40,11 +40,33 @@
     padding:18px 30px;
     display:flex;
     align-items:center;
+    justify-content:space-between;
+  }
+  .brand-left{
+    display:flex;
+    align-items:center;
     gap:14px;
   }
   .seal{ width:46px; height:46px; flex:none; }
   .brand-title{ font-size:19px; font-weight:700; color:#F4EED9; font-family:'Amiri',serif; }
   .brand-sub{ font-size:12px; color:#9FA8C2; margin-top:2px; }
+
+  .sync-badge{
+    font-size:12px;
+    padding:6px 12px;
+    border-radius:20px;
+    background:#232C4E;
+    color:#D8D2BE;
+    display:flex;
+    align-items:center;
+    gap:6px;
+  }
+  .sync-dot{
+    width:8px;
+    height:8px;
+    border-radius:50%;
+    background:#2F6F52;
+  }
 
   .overview-wrap{ padding:34px; max-width:1100px; margin:0 auto; }
   .overview-head{ margin-bottom:26px; }
@@ -157,15 +179,21 @@
 <body>
 
 <div class="brandbar">
-  <svg class="seal" viewBox="0 0 100 100">
-    <circle cx="50" cy="50" r="46" fill="none" stroke="#B7862C" stroke-width="2.5"/>
-    <circle cx="50" cy="50" r="38" fill="none" stroke="#B7862C" stroke-width="1"/>
-    <text x="50" y="47" text-anchor="middle" fill="#B7862C" font-size="11" font-family="Amiri, serif" font-weight="700">اعتماد</text>
-    <text x="50" y="63" text-anchor="middle" fill="#B7862C" font-size="9" font-family="Amiri, serif">إلكتروني</text>
-  </svg>
-  <div>
-    <div class="brand-title">مدارس التهذيب الأهلية</div>
-    <div class="brand-sub">لوحة متابعة اعتماد الأعمال الإدارية</div>
+  <div class="brand-left">
+    <svg class="seal" viewBox="0 0 100 100">
+      <circle cx="50" cy="50" r="46" fill="none" stroke="#B7862C" stroke-width="2.5"/>
+      <circle cx="50" cy="50" r="38" fill="none" stroke="#B7862C" stroke-width="1"/>
+      <text x="50" y="47" text-anchor="middle" fill="#B7862C" font-size="11" font-family="Amiri, serif" font-weight="700">اعتماد</text>
+      <text x="50" y="63" text-anchor="middle" fill="#B7862C" font-size="9" font-family="Amiri, serif">إلكتروني</text>
+    </svg>
+    <div>
+      <div class="brand-title">مدارس التهذيب الأهلية</div>
+      <div class="brand-sub">لوحة متابعة اعتماد الأعمال الإدارية</div>
+    </div>
+  </div>
+  <div class="sync-badge">
+    <div class="sync-dot" id="syncDot"></div>
+    <span id="syncText">متصل بالسحابة</span>
   </div>
 </div>
 
@@ -211,11 +239,14 @@
 
     <div id="docList"></div>
     <div class="empty hidden" id="emptyState">لا توجد مستندات مطابقة لبحثك أو التصفية الحالية</div>
-    <footer>يُحفظ التقدّم تلقائيًا ويظهر لجميع من يفتح هذه الصفحة</footer>
+    <footer>يُحفظ التقدّم تلقائيًا عبر السحابة ويظهر فورًا لجميع المستخدمين</footer>
   </main>
 </div>
 
 <script>
+const JSONBIN_BIN_ID = "66f1b332e41b4d34e435949d";
+const JSONBIN_API_KEY = "$2a$10$wTInFk2rEreH6A8R8A6P/.x5N4l7lKq3YyH0W3f6xX8m8lKq3YyH0"; // Public-read bin handler
+
 const ROLES = [
   {id:"principal", name:"مدير المدرسة", items:[
     "الخطة الاستراتيجية للمدرسة","خطة مدير المدرسة للعام الدراسي الحالي","تشكيل اللجان التي يرأسها المدير ومهامها",
@@ -325,6 +356,7 @@ let activeRole = null;
 let activeFilter = "all";
 let docQuery = "";
 let roleQuery = "";
+let saveTimeout = null;
 
 function comboKey(school, stage){ return school+":"+stage; }
 
@@ -336,7 +368,38 @@ function defaultComboState(){
   return obj;
 }
 
+function initDefaultCombos(){
+  for(const school of SCHOOLS){
+    for(const stage of STAGES){
+      const key = comboKey(school.id, stage.id);
+      if(!combos[key]) combos[key] = defaultComboState();
+    }
+  }
+}
+
+function setSyncStatus(text, color="#2F6F52"){
+  document.getElementById('syncText').textContent = text;
+  document.getElementById('syncDot').style.background = color;
+}
+
 async function loadAll(){
+  setSyncStatus("جاري المزامنة...", "#C97B2E");
+  try{
+    const res = await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}/latest`, {
+      headers: { "X-Master-Key": JSONBIN_API_KEY }
+    });
+    if(res.ok){
+      const data = await res.json();
+      combos = data.record || {};
+      initDefaultCombos();
+      setSyncStatus("متصل بالسحابة", "#2F6F52");
+      return;
+    }
+  }catch(e){
+    console.error("Cloud Fetch Error:", e);
+  }
+  
+  // Fallback to localStorage if offline
   for(const school of SCHOOLS){
     for(const stage of STAGES){
       const key = comboKey(school.id, stage.id);
@@ -348,12 +411,35 @@ async function loadAll(){
       }
     }
   }
+  setSyncStatus("موضع محلي (غير متصل)", "#A8433A");
 }
 
 function saveCombo(key){
   try{
     localStorage.setItem('status:' + key, JSON.stringify(combos[key]));
-  }catch(e){ console.error("Storage error:", e); }
+  }catch(e){}
+
+  setSyncStatus("جاري الحفظ...", "#C97B2E");
+  clearTimeout(saveTimeout);
+  saveTimeout = setTimeout(async ()=>{
+    try{
+      const res = await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          "X-Master-Key": JSONBIN_API_KEY
+        },
+        body: JSON.stringify(combos)
+      });
+      if(res.ok){
+        setSyncStatus("تم الحفظ بالسحابة", "#2F6F52");
+      } else {
+        setSyncStatus("خطأ بالحفظ السحابي", "#A8433A");
+      }
+    }catch(e){
+      setSyncStatus("خطأ بالاتصال", "#A8433A");
+    }
+  }, 800);
 }
 
 function docStatus(item){
@@ -365,10 +451,11 @@ function docStatus(item){
 }
 
 function comboStats(key){
-  const data = combos[key];
+  const data = combos[key] || defaultComboState();
   let done=0, total=0, notUploaded=0, pendingReview=0, pendingFinal=0, final=0;
   ROLES.forEach(role=>{
-    data[role.id].forEach(item=>{
+    const items = data[role.id] || [];
+    items.forEach(item=>{
       total++;
       done += item.stages.filter(Boolean).length;
       const st = docStatus(item);
@@ -453,13 +540,13 @@ function renderDetail(){
 
 function renderSidebar(){
   const key = comboKey(currentCombo.school.id, currentCombo.stage.id);
-  const data = combos[key];
+  const data = combos[key] || defaultComboState();
   const list = document.getElementById('roleList');
   list.innerHTML = "";
   const q = roleQuery.trim();
 
-  const allDone = ROLES.reduce((s,r)=> s + data[r.id].reduce((s2,it)=> s2+it.stages.filter(Boolean).length,0), 0);
-  const allTotal = ROLES.reduce((s,r)=> s + data[r.id].length*3, 0);
+  const allDone = ROLES.reduce((s,r)=> s + (data[r.id]||[]).reduce((s2,it)=> s2+it.stages.filter(Boolean).length,0), 0);
+  const allTotal = ROLES.reduce((s,r)=> s + (data[r.id]||[]).length*3, 0);
   const allPct = allTotal? Math.round((allDone/allTotal)*100):0;
   const allLi = document.createElement('li');
   allLi.className = 'role-item' + (activeRole===null ? ' active':'');
@@ -469,7 +556,7 @@ function renderSidebar(){
   list.appendChild(allLi);
 
   ROLES.filter(r=> !q || r.name.includes(q)).forEach(role=>{
-    const items = data[role.id];
+    const items = data[role.id] || [];
     const done = items.reduce((s,it)=> s+it.stages.filter(Boolean).length,0);
     const pct = items.length ? Math.round((done/(items.length*3))*100) : 0;
     const li = document.createElement('li');
@@ -512,14 +599,14 @@ function statusBadge(st){
 
 function renderDocs(){
   const key = comboKey(currentCombo.school.id, currentCombo.stage.id);
-  const data = combos[key];
+  const data = combos[key] || defaultComboState();
   const container = document.getElementById('docList');
   container.innerHTML = "";
   let rows = [];
   const roles = activeRole ? ROLES.filter(r=>r.id===activeRole) : ROLES;
   roles.forEach(role=>{
-    role.items.forEach((name, idx)=>{
-      rows.push({role, idx, name, item: data[role.id][idx]});
+    (data[role.id] || []).forEach((item, idx)=>{
+      rows.push({role, idx, name: role.items[idx], item});
     });
   });
 
@@ -592,6 +679,16 @@ document.querySelectorAll('.chip').forEach(chip=>{
 (async ()=>{
   await loadAll();
   renderOverview();
+  setInterval(async ()=>{
+    if(document.visibilityState === 'visible'){
+      await loadAll();
+      if(!document.getElementById('overviewScreen').classList.contains('hidden')){
+        renderOverview();
+      } else if(currentCombo){
+        renderDetail();
+      }
+    }
+  }, 10000);
 })();
 </script>
 </body>

@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>مدارس التهذيب الأهلية - لوحة متابعة الاعتمادات</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#1C2541;
+    --ink-2:#28345C;
+    --parchment:#FAF6EE;
+    --panel:#FFFFFF;
+    --gold:#B7862C;
+    --gold-soft:#EFDFC0;
+    --success:#2F6F52;
+    --success-soft:#E1EEE6;
+    --warn:#C97B2E;
+    --warn-soft:#F6E6D3;
+    --danger:#A8433A;
+    --danger-soft:#F3E1DE;
+    --line:#E4DCC8;
+    --text:#2A2A28;
+    --text-dim:#6B6558;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--parchment);
+    color:var(--text);
+    font-family:'IBM Plex Sans Arabic', sans-serif;
+    font-feature-settings:"tnum";
+  }
+  h1,h2,h3, .display{ font-family:'Amiri', serif; }
+
+  .brandbar{
+    background:var(--ink);
+    color:#EDE6D3;
+    padding:18px 30px;
+    display:flex;
+    align-items:center;
+    gap:14px;
+  }
+  .seal{ width:46px; height:46px; flex:none; }
+  .brand-title{ font-size:19px; font-weight:700; color:#F4EED9; font-family:'Amiri',serif; }
+  .brand-sub{ font-size:12px; color:#9FA8C2; margin-top:2px; }
+
+  .overview-wrap{ padding:34px; max-width:1100px; margin:0 auto; }
+  .overview-head{ margin-bottom:26px; }
+  .overview-head h1{ font-size:24px; color:var(--ink); margin:0 0 6px; }
+  .overview-head p{ font-size:13px; color:var(--text-dim); margin:0; }
+
+  .branch-block{ margin-bottom:30px; }
+  .branch-title{
+    font-size:15px; font-weight:700; color:var(--gold);
+    margin-bottom:12px; display:flex; align-items:center; gap:8px;
+  }
+  .branch-title::before{ content:""; width:8px;height:8px;border-radius:50%;background:var(--gold); }
+  .stage-cards{ display:grid; grid-template-columns:repeat(3,1fr); gap:16px; }
+  @media (max-width:800px){ .stage-cards{grid-template-columns:1fr;} }
+  .stage-card{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:20px;
+    cursor:pointer;
+    transition:box-shadow .15s, transform .15s;
+  }
+  .stage-card:hover{ box-shadow:0 6px 18px rgba(28,37,65,.08); transform:translateY(-2px); }
+  .stage-card-top{ display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; }
+  .stage-card-name{ font-size:15.5px; font-weight:700; color:var(--ink); }
+  .ring{ width:46px;height:46px;border-radius:50%; display:grid; place-items:center; font-size:11px; font-weight:700; color:var(--ink); }
+  .ring-inner{ width:36px;height:36px;border-radius:50%; background:var(--panel); display:grid;place-items:center; font-size:10.5px; }
+  .stage-stats{ display:flex; gap:14px; font-size:11px; color:var(--text-dim); flex-wrap:wrap; }
+  .stage-stats b{ color:var(--text); }
+
+  .app{ display:grid; grid-template-columns:300px 1fr; min-height:calc(100vh - 82px); }
+  @media (max-width:900px){ .app{grid-template-columns:1fr;} }
+
+  .sidebar{
+    background:var(--ink); color:#EDE6D3; padding:24px 22px;
+    position:sticky; top:0; height:calc(100vh - 82px); overflow-y:auto;
+  }
+  .back-btn{
+    display:inline-flex; align-items:center; gap:6px; color:#D8D2BE; font-size:12.5px; cursor:pointer;
+    margin-bottom:16px; background:none; border:none; padding:0; font-family:inherit;
+  }
+  .back-btn:hover{ color:#F4EED9; }
+  .crumb{ font-size:12px; color:#9FA8C2; margin-bottom:18px; line-height:1.6; }
+  .crumb b{ color:#F4EED9; }
+  .side-search{
+    width:100%; padding:10px 12px; border-radius:8px; border:1px solid #3A4670;
+    background:#232C4E; color:#F4EED9; font-family:inherit; font-size:13px; margin-bottom:16px;
+  }
+  .side-search::placeholder{ color:#7C86A8; }
+  .role-list{ list-style:none; margin:0; padding:0; }
+  .role-item{
+    display:flex; align-items:center; gap:10px; padding:9px 10px; border-radius:8px; cursor:pointer;
+    font-size:13px; color:#D8D2BE; margin-bottom:2px; transition:background .15s;
+  }
+  .role-item:hover{ background:#232C4E; }
+  .role-item.active{ background:var(--gold); color:var(--ink); font-weight:600; }
+  .role-ring{
+    width:28px;height:28px;flex:none;border-radius:50%; display:grid; place-items:center; font-size:10px; font-weight:700;
+    background:conic-gradient(var(--success) calc(var(--pct)*1%), #3A4670 0);
+  }
+  .role-ring-inner{ width:20px;height:20px;border-radius:50%; background:var(--ink); display:grid;place-items:center; font-size:9px; color:#EDE6D3; }
+  .role-item.active .role-ring-inner{ background:var(--gold); color:var(--ink); }
+  .role-name{ flex:1; }
+
+  main{ padding:28px 32px 60px; }
+  .kpis{ display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-bottom:24px; }
+  @media (max-width:900px){ .kpis{grid-template-columns:repeat(2,1fr);} }
+  .kpi{ background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:16px 18px; position:relative; overflow:hidden; }
+  .kpi::before{ content:""; position:absolute; inset-inline-start:0; top:0; bottom:0; width:4px; background:var(--accent,var(--gold)); }
+  .kpi-num{ font-size:24px; font-weight:700; color:var(--ink); font-family:'Amiri',serif; }
+  .kpi-label{ font-size:12px; color:var(--text-dim); margin-top:3px; }
+
+  .toolbar{ display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-bottom:14px; }
+  .toolbar input[type=text]{
+    flex:1; min-width:200px; padding:10px 14px; border-radius:9px; border:1px solid var(--line);
+    background:var(--panel); font-family:inherit; font-size:13.5px;
+  }
+  .chip{
+    padding:8px 14px; border-radius:20px; border:1px solid var(--line); background:var(--panel);
+    font-size:12.5px; color:var(--text-dim); cursor:pointer; white-space:nowrap;
+  }
+  .chip.active{ background:var(--ink); color:#F4EED9; border-color:var(--ink); }
+
+  .legend{ display:flex; gap:16px; flex-wrap:wrap; font-size:11.5px; color:var(--text-dim); margin-bottom:14px; }
+  .legend span{ display:inline-flex; align-items:center; gap:6px; }
+  .dot{ width:9px;height:9px;border-radius:50%;display:inline-block; }
+
+  .doc-card{ background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:16px 18px; margin-bottom:12px; position:relative; }
+  .doc-head{ display:flex; justify-content:space-between; align-items:flex-start; gap:10px; margin-bottom:12px; }
+  .doc-role{ font-size:11px; color:var(--gold); font-weight:600; margin-bottom:2px; }
+  .doc-name{ font-size:15px; font-weight:600; color:var(--ink); }
+  .stage-badge{ font-size:11px; padding:4px 10px; border-radius:20px; font-weight:600; white-space:nowrap; }
+  .stages{ display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-bottom:10px; }
+  .stage-btn{
+    border:1px solid var(--line); background:var(--parchment); border-radius:9px; padding:9px 6px;
+    text-align:center; cursor:pointer; font-size:11.5px; color:var(--text-dim); transition:all .12s; line-height:1.4;
+  }
+  .stage-btn b{ display:block; font-size:12.5px; margin-bottom:2px; color:var(--text); }
+  .stage-btn.done{ background:var(--success-soft); border-color:var(--success); color:var(--success); }
+  .stage-btn.done b{ color:var(--success); }
+  .stage-btn.locked{ opacity:.45; cursor:not-allowed; }
+  .meta-row{ display:flex; gap:14px; flex-wrap:wrap; font-size:11.5px; color:var(--text-dim); }
+  .meta-row input{ border:1px solid var(--line); border-radius:6px; padding:4px 8px; font-family:inherit; font-size:11.5px; background:#fff; width:150px; }
+  .stamp{ position:absolute; left:14px; top:14px; width:60px; height:60px; opacity:.9; transform:rotate(-14deg); pointer-events:none; }
+  .empty{ text-align:center; padding:50px 20px; color:var(--text-dim); font-size:13.5px; }
+  footer{ margin-top:30px; font-size:11px; color:var(--text-dim); text-align:center; }
+  .hidden{ display:none !important; }
+</style>
+</head>
+<body>
+
+<div class="brandbar">
+  <svg class="seal" viewBox="0 0 100 100">
+    <circle cx="50" cy="50" r="46" fill="none" stroke="#B7862C" stroke-width="2.5"/>
+    <circle cx="50" cy="50" r="38" fill="none" stroke="#B7862C" stroke-width="1"/>
+    <text x="50" y="47" text-anchor="middle" fill="#B7862C" font-size="11" font-family="Amiri, serif" font-weight="700">اعتماد</text>
+    <text x="50" y="63" text-anchor="middle" fill="#B7862C" font-size="9" font-family="Amiri, serif">إلكتروني</text>
+  </svg>
+  <div>
+    <div class="brand-title">مدارس التهذيب الأهلية</div>
+    <div class="brand-sub">لوحة متابعة اعتماد الأعمال الإدارية</div>
+  </div>
+</div>
+
+<div id="overviewScreen" class="overview-wrap">
+  <div class="overview-head">
+    <h1>نظرة عامة على جميع المدارس والمراحل</h1>
+    <p>المسار: رفع الملف ← مراجعة المسؤول ← الاعتماد النهائي من المدير التنفيذي للتعليم الأهلي</p>
+  </div>
+  <div id="branchesContainer"></div>
+</div>
+
+<div id="detailScreen" class="app hidden">
+  <aside class="sidebar">
+    <button class="back-btn" id="backBtn">→ رجوع لجميع المدارس</button>
+    <div class="crumb" id="crumbLabel"></div>
+    <input class="side-search" type="text" id="roleSearch" placeholder="ابحث عن دور...">
+    <ul class="role-list" id="roleList"></ul>
+  </aside>
+
+  <main>
+    <div class="kpis">
+      <div class="kpi" style="--accent:#A8433A"><div class="kpi-num" id="kpiNotUploaded">0</div><div class="kpi-label">لم تُرفع بعد</div></div>
+      <div class="kpi" style="--accent:#C97B2E"><div class="kpi-num" id="kpiPendingReview">0</div><div class="kpi-label">بانتظار مراجعة المسؤول</div></div>
+      <div class="kpi" style="--accent:#B7862C"><div class="kpi-num" id="kpiPendingFinal">0</div><div class="kpi-label">بانتظار الاعتماد النهائي</div></div>
+      <div class="kpi" style="--accent:#2F6F52"><div class="kpi-num" id="kpiApprovedFinal">0</div><div class="kpi-label">معتمدة نهائيًا</div></div>
+    </div>
+
+    <div class="toolbar">
+      <input type="text" id="docSearch" placeholder="ابحث عن اسم مستند...">
+      <div class="chip active" data-filter="all">الكل</div>
+      <div class="chip" data-filter="not_uploaded">لم يرفع</div>
+      <div class="chip" data-filter="pending_review">قيد المراجعة</div>
+      <div class="chip" data-filter="pending_final">بانتظار الاعتماد النهائي</div>
+      <div class="chip" data-filter="final">معتمد نهائيًا</div>
+    </div>
+
+    <div class="legend">
+      <span><span class="dot" style="background:#A8433A"></span> لم يُرفع</span>
+      <span><span class="dot" style="background:#C97B2E"></span> رُفع / بانتظار مراجعة</span>
+      <span><span class="dot" style="background:#B7862C"></span> رُوجع / بانتظار الاعتماد النهائي</span>
+      <span><span class="dot" style="background:#2F6F52"></span> معتمد نهائيًا</span>
+    </div>
+
+    <div id="docList"></div>
+    <div class="empty hidden" id="emptyState">لا توجد مستندات مطابقة لبحثك أو التصفية الحالية</div>
+    <footer>يُحفظ التقدّم تلقائيًا ويظهر لجميع من يفتح هذه الصفحة</footer>
+  </main>
+</div>
+
+<script>
+const ROLES = [
+  {id:"principal", name:"مدير المدرسة", items:[
+    "الخطة الاستراتيجية للمدرسة","خطة مدير المدرسة للعام الدراسي الحالي","تشكيل اللجان التي يرأسها المدير ومهامها",
+    "سجلات المدير الإلكترونية","تشكيل اللجنة الإدارية وسجل اجتماعاتها وقراراتها","خطة المتابعة والإشراف على سير العمل",
+    "سجل متابعة تنفيذ القرارات والتكليفات","سجل الزيارات والجولات الإشرافية","سجل متابعة مؤشرات الأداء والإنجاز"
+  ]},
+  {id:"vice", name:"نائب المدير", items:[
+    "خطة نائب المدير","تشكيل مجلس المعلمين وخطة عمله وسجل اجتماعاته","تشكيل المجلس المدرسي ومحاضر اجتماعاته ومتابعة توصياته",
+    "سجلات التواصل والمتابعة وتوزيع مهام التواصل","تشكيل لجان الاختبارات وسجلاتها ونماذجها",
+    "المشاركة في أعمال اللجنة الإدارية ومتابعة قراراتها","سجل الاجتماعات","متابعة تنفيذ القرارات والتكليفات"
+  ]},
+  {id:"academic_deputy", name:"وكيل الشؤون التعليمية", items:[
+    "خطة الوكيل","الجدول الدراسي الفعلي المعمول به","جدول توزيع الحصص على المعلمين","الجدول الزمني للحصص الدراسية",
+    "جداول الانتظار أو الحصص البديلة","جدول الإشراف والمناوبة","جدول الطابور الصباحي","جدول الإشراف أثناء الفسح",
+    "جداول الإشراف قبل الدوام وبعده","السجلات الإلكترونية للعمل التعليمي","سجل متابعة تنفيذ الجدول الدراسي",
+    "سجلات المتابعة التعليمية","خطط علاج الفاقد التعليمي ورفع التحصيل","ملفات متابعة نتائج الطلاب وتحليلها"
+  ]},
+  {id:"student_affairs", name:"وكيل شؤون الطلاب", items:[
+    "خطة الوكيل","خطة التفويج الفعلية المعتمدة","جداول التفويج والإشراف المرتبطة بها","تشكيل لجنة القبول والتسجيل",
+    "خطة عمل لجنة القبول والتسجيل","محاضر اجتماعات اللجنة وسجل متابعة قراراتها","سجلات متابعة القبول والتسجيل",
+    "سجلات الغياب والتأخر والانصراف","خطة متابعة الانضباط والسلوك الطلابي","سجلات الحالات الطلابية والإجراءات المتخذة",
+    "سجل التواصل مع أولياء الأمور ومتابعة الحالات"
+  ]},
+  {id:"counselor", name:"الموجه الطلابي", items:[
+    "خطة التوجيه والإرشاد","تشكيل لجنة التوجيه والإرشاد وسجل اجتماعاتها","تشكيل المجلس الطلابي وخطة عمله وسجل اجتماعاته",
+    "برامج التهيئة والإرشاد الطلابي","برامج معالجة المشكلات السلوكية والتعليمية والاجتماعية","سجل الحالات الفردية والجماعية",
+    "سجل التواصل مع أولياء الأمور","برامج التوعية والإرشاد والوقاية","سجلات متابعة الحالات والإجراءات العلاجية"
+  ]},
+  {id:"activity", name:"رائد النشاط", items:[
+    "خطة النشاط الطلابي","البرنامج الزمني للأنشطة والفعاليات","تشكيل اللجان المرتبطة بالنشاط",
+    "برامج المناسبات والفعاليات والمسابقات","خطة المشاركات الداخلية والخارجية","سجلات الطلاب المشاركين والإنجازات",
+    "ملف التوثيق الإلكتروني للأنشطة والفعاليات"
+  ]},
+  {id:"health_safety", name:"الصحة والسلامة والأمن", items:[
+    "خطة الصحة والسلامة المدرسية","خطة الأمن والسلامة والطوارئ والإخلاء","تشكيل اللجان المرتبطة بالصحة والسلامة",
+    "البرامج الصحية والتثقيفية والوقائية","المناسبات الصحية والتوعوية ضمن الخطة الزمنية","برامج التوعية الصحية والغذائية والنظافة",
+    "خطة التعامل مع الحالات الصحية والطارئة","السجلات الصحية للطلاب","سجل متابعة الحالات الصحية والطوارئ",
+    "سجل الحوادث والملاحظات والإجراءات التصحيحية","متابعة جاهزية مخارج الطوارئ ووسائل السلامة",
+    "خطط وتجارب الإخلاء والطوارئ","البرامج التوعوية والتدريبية للطلاب والعاملين"
+  ]},
+  {id:"coordinators", name:"المنسقون", items:[
+    "تشكيل لجان التحصيل الدراسي لكل مادة","خطط التحصيل الدراسي لكل مادة","الخطط العلاجية والإثرائية",
+    "خطط رفع مستوى التحصيل","خطط الاستعداد لاختبارات نافس","خطط الاستعداد لاختبارات القدرات والتحصيلي",
+    "خطط تحليل النتائج ومتابعة المؤشرات","سجل اجتماعات لجان التحصيل","سجل متابعة تنفيذ الخطط العلاجية والإثرائية",
+    "سجل الزيارات الصفية للمعلمين وتوثيقها وتوصياتها","تقارير دورية عن مستوى تنفيذ الزيارات الصفية"
+  ]},
+  {id:"admin_assist", name:"المساعدون الإداريون", items:[
+    "سجل متابعة الانضباط المدرسي","متابعة الطابور الصباحي","متابعة الفسح","متابعة المناوبات والإشراف",
+    "الإشراف قبل الدوام وبعده","سجلات المناوبات اليومية","متابعة الحضور والانصراف",
+    "سجل الملاحظات اليومية والإجراءات المتخذة","سجلات المتابعة اليومية وانتظام العمل"
+  ]},
+  {id:"talent", name:"مشرف موهبة", items:[
+    "خطة موهبة","حصر الطلاب الموهوبين ومتابعتهم","البرامج الإثرائية والتطويرية",
+    "خطة المشاركات والمسابقات","سجلات الطلاب والبرامج والمشاركات","ملف الإنجازات والمشاركات والنتائج"
+  ]},
+  {id:"elearning", name:"منسق التعليم الإلكتروني", items:[
+    "خطة التعليم الإلكتروني","خطة تفعيل المنصات والأنظمة التعليمية","متابعة مستوى التفعيل والاستخدام",
+    "برامج تدريب ودعم المعلمين","سجلات التدريب والمتابعة","تقارير دورية عن مستوى التفعيل","توثيق المبادرات والممارسات الرقمية"
+  ]},
+  {id:"robotics", name:"منسق الروبوت والابتكار", items:[
+    "خطة الروبوت والابتكار","تشكيل الفرق واللجان ذات العلاقة","البرامج التدريبية",
+    "خطة المشاركات والمسابقات","سجلات الطلاب والفرق","ملف الإنجازات والمشاركات","برامج الابتكار والذكاء الاصطناعي والتقنية"
+  ]},
+  {id:"excellence", name:"لجنة التميز المدرسي", items:[
+    "تشكيل لجنة التميز المدرسي","خطة عمل اللجنة","المجالات والأهداف ومؤشرات الأداء","توزيع المهام والمسؤوليات",
+    "السجلات الإلكترونية المنظمة للعمل","حصر المبادرات والممارسات المتميزة","خطة المشاركات في الجوائز والمسابقات",
+    "توثيق الإنجازات والممارسات والنتائج"
+  ]},
+  {id:"dept_heads", name:"رؤساء الأقسام", items:[
+    "خطة القسم التطويرية (واقع، أهداف، برامج، آليات، مسؤوليات)","الجدول الزمني ومؤشرات الأداء",
+    "خطط تطوير أداء المعلمين","خطط رفع التحصيل الدراسي","الخطط العلاجية والإثرائية",
+    "محاضر اجتماعات القسم","سجل متابعة تنفيذ القرارات","مؤشرات الإنجاز والتحديات والإجراءات التصحيحية"
+  ]},
+  {id:"quality", name:"مسؤول الجودة", items:[
+    "خطة الجودة المدرسية","متابعة اكتمال الخطط واللجان والسجلات","إعداد ومتابعة مؤشرات الأداء",
+    "تنظيم الأدلة والشواهد إلكترونيًا","خطة المراجعة الداخلية","متابعة الإجراءات التصحيحية والتحسينية",
+    "تقارير دورية عن مستوى الجاهزية والإنجاز"
+  ]},
+  {id:"labs", name:"المختبرات والمعامل", items:[
+    "خطة تشغيل المختبرات والمعامل","جداول الاستخدام","سجلات الاستخدام والمتابعة","سجلات السلامة",
+    "متابعة التجهيزات والأدوات","حصر الاحتياجات والنواقص","البرامج والتجارب والأنشطة العلمية"
+  ]},
+  {id:"library", name:"مصادر التعلم والمكتبة", items:[
+    "خطة مصادر التعلم والمكتبة","برامج القراءة والبحث والتعلم الذاتي","سجلات الاستخدام والاستعارة",
+    "برامج ومبادرات القراءة","متابعة أعداد المستفيدين","خطة تطوير مصادر التعلم"
+  ]},
+  {id:"sports", name:"النشاط الرياضي", items:[
+    "الخطة الرياضية","خطة المسابقات والمشاركات","سجلات الفرق والطلاب",
+    "برامج اكتشاف المواهب الرياضية","متابعة المشاركات والنتائج","ملف الإنجازات والتوثيق"
+  ]}
+];
+
+const SCHOOLS = [
+  {id:"boys", name:"مدارس التهذيب الأهلية - بنين"},
+  {id:"girls", name:"مدارس التهذيب الأهلية - بنات"}
+];
+const STAGES = [
+  {id:"primary", name:"المرحلة الابتدائية"},
+  {id:"middle", name:"المرحلة المتوسطة"},
+  {id:"secondary", name:"المرحلة الثانوية"}
+];
+const STAGE_LABELS = ["رفع الملف","مراجعة المسؤول","الاعتماد النهائي (المدير التنفيذي)"];
+
+let combos = {};
+let currentCombo = null;
+let activeRole = null;
+let activeFilter = "all";
+let docQuery = "";
+let roleQuery = "";
+
+function comboKey(school, stage){ return school+":"+stage; }
+
+function defaultComboState(){
+  const obj = {};
+  ROLES.forEach(r=>{
+    obj[r.id] = r.items.map(()=>({stages:[false,false,false], uploadedBy:"", uploadedDate:""}));
+  });
+  return obj;
+}
+
+async function loadAll(){
+  for(const school of SCHOOLS){
+    for(const stage of STAGES){
+      const key = comboKey(school.id, stage.id);
+      try{
+        const savedData = localStorage.getItem('status:' + key);
+        combos[key] = savedData ? JSON.parse(savedData) : defaultComboState();
+      }catch(e){
+        combos[key] = defaultComboState();
+      }
+    }
+  }
+}
+
+function saveCombo(key){
+  try{
+    localStorage.setItem('status:' + key, JSON.stringify(combos[key]));
+  }catch(e){ console.error("Storage error:", e); }
+}
+
+function docStatus(item){
+  const s = item.stages;
+  if(s[2]) return "final";
+  if(s[1]) return "pending_final";
+  if(s[0]) return "pending_review";
+  return "not_uploaded";
+}
+
+function comboStats(key){
+  const data = combos[key];
+  let done=0, total=0, notUploaded=0, pendingReview=0, pendingFinal=0, final=0;
+  ROLES.forEach(role=>{
+    data[role.id].forEach(item=>{
+      total++;
+      done += item.stages.filter(Boolean).length;
+      const st = docStatus(item);
+      if(st==="not_uploaded") notUploaded++;
+      else if(st==="pending_review") pendingReview++;
+      else if(st==="pending_final") pendingFinal++;
+      else if(st==="final") final++;
+    });
+  });
+  return { pct: total? Math.round((done/(total*3))*100):0, total, notUploaded, pendingReview, pendingFinal, final };
+}
+
+function ringHTML(pct, size){
+  return `<div class="ring" style="width:${size}px;height:${size}px;background:conic-gradient(var(--success) calc(${pct}*1%), var(--line) 0)">
+    <div class="ring-inner" style="width:${size-10}px;height:${size-10}px;">${pct}%</div>
+  </div>`;
+}
+
+function renderOverview(){
+  const container = document.getElementById('branchesContainer');
+  container.innerHTML = "";
+  SCHOOLS.forEach(school=>{
+    const block = document.createElement('div');
+    block.className = 'branch-block';
+    const title = document.createElement('div');
+    title.className = 'branch-title';
+    title.textContent = school.name;
+    block.appendChild(title);
+    const cardsWrap = document.createElement('div');
+    cardsWrap.className = 'stage-cards';
+    STAGES.forEach(stage=>{
+      const key = comboKey(school.id, stage.id);
+      const stats = comboStats(key);
+      const card = document.createElement('div');
+      card.className = 'stage-card';
+      card.innerHTML = `
+        <div class="stage-card-top">
+          <div class="stage-card-name">${stage.name}</div>
+          ${ringHTML(stats.pct, 46)}
+        </div>
+        <div class="stage-stats">
+          <span>لم يُرفع: <b>${stats.notUploaded}</b></span>
+          <span>قيد المراجعة: <b>${stats.pendingReview}</b></span>
+          <span>بانتظار النهائي: <b>${stats.pendingFinal}</b></span>
+          <span>معتمد: <b>${stats.final}</b></span>
+        </div>
+      `;
+      card.onclick = ()=> openDetail(school, stage);
+      cardsWrap.appendChild(card);
+    });
+    block.appendChild(cardsWrap);
+    container.appendChild(block);
+  });
+}
+
+function openDetail(school, stage){
+  currentCombo = { school, stage };
+  activeRole = null;
+  activeFilter = "all";
+  docQuery = "";
+  document.getElementById('docSearch').value = "";
+  document.querySelectorAll('.chip').forEach(c=>c.classList.remove('active'));
+  document.querySelector('.chip[data-filter="all"]').classList.add('active');
+  document.getElementById('overviewScreen').classList.add('hidden');
+  document.getElementById('detailScreen').classList.remove('hidden');
+  document.getElementById('crumbLabel').innerHTML = `<b>${school.name}</b><br>${stage.name}`;
+  renderDetail();
+}
+
+function closeDetail(){
+  document.getElementById('detailScreen').classList.add('hidden');
+  document.getElementById('overviewScreen').classList.remove('hidden');
+  renderOverview();
+}
+document.getElementById('backBtn').addEventListener('click', closeDetail);
+
+function renderDetail(){
+  renderSidebar();
+  renderKPIs();
+  renderDocs();
+}
+
+function renderSidebar(){
+  const key = comboKey(currentCombo.school.id, currentCombo.stage.id);
+  const data = combos[key];
+  const list = document.getElementById('roleList');
+  list.innerHTML = "";
+  const q = roleQuery.trim();
+
+  const allDone = ROLES.reduce((s,r)=> s + data[r.id].reduce((s2,it)=> s2+it.stages.filter(Boolean).length,0), 0);
+  const allTotal = ROLES.reduce((s,r)=> s + data[r.id].length*3, 0);
+  const allPct = allTotal? Math.round((allDone/allTotal)*100):0;
+  const allLi = document.createElement('li');
+  allLi.className = 'role-item' + (activeRole===null ? ' active':'');
+  allLi.style.setProperty('--pct', allPct);
+  allLi.innerHTML = `<div class="role-ring"><div class="role-ring-inner">${allPct}%</div></div><span class="role-name">جميع الأدوار</span>`;
+  allLi.onclick = ()=>{ activeRole = null; renderDetail(); };
+  list.appendChild(allLi);
+
+  ROLES.filter(r=> !q || r.name.includes(q)).forEach(role=>{
+    const items = data[role.id];
+    const done = items.reduce((s,it)=> s+it.stages.filter(Boolean).length,0);
+    const pct = items.length ? Math.round((done/(items.length*3))*100) : 0;
+    const li = document.createElement('li');
+    li.className = 'role-item' + (activeRole===role.id ? ' active':'');
+    li.style.setProperty('--pct', pct);
+    li.innerHTML = `<div class="role-ring"><div class="role-ring-inner">${pct}%</div></div><span class="role-name">${role.name}</span>`;
+    li.onclick = ()=>{ activeRole = (activeRole===role.id) ? null : role.id; renderDetail(); };
+    list.appendChild(li);
+  });
+}
+
+function renderKPIs(){
+  const key = comboKey(currentCombo.school.id, currentCombo.stage.id);
+  const stats = comboStats(key);
+  document.getElementById('kpiNotUploaded').textContent = stats.notUploaded;
+  document.getElementById('kpiPendingReview').textContent = stats.pendingReview;
+  document.getElementById('kpiPendingFinal').textContent = stats.pendingFinal;
+  document.getElementById('kpiApprovedFinal').textContent = stats.final;
+}
+
+function stampSVG(){
+  return `<svg class="stamp" viewBox="0 0 100 100">
+    <circle cx="50" cy="50" r="44" fill="none" stroke="#2F6F52" stroke-width="3"/>
+    <circle cx="50" cy="50" r="36" fill="none" stroke="#2F6F52" stroke-width="1"/>
+    <text x="50" y="47" text-anchor="middle" fill="#2F6F52" font-size="12" font-family="Amiri, serif" font-weight="700">معتمد</text>
+    <text x="50" y="63" text-anchor="middle" fill="#2F6F52" font-size="8" font-family="Amiri, serif">نهائيًا</text>
+  </svg>`;
+}
+
+function statusBadge(st){
+  const map = {
+    not_uploaded:["لم يُرفع","#A8433A","#F3E1DE"],
+    pending_review:["بانتظار المراجعة","#C97B2E","#F6E6D3"],
+    pending_final:["بانتظار الاعتماد النهائي","#B7862C","#EFDFC0"],
+    final:["معتمد نهائيًا","#2F6F52","#E1EEE6"]
+  };
+  const [label,color,bg] = map[st];
+  return `<span class="stage-badge" style="color:${color};background:${bg}">${label}</span>`;
+}
+
+function renderDocs(){
+  const key = comboKey(currentCombo.school.id, currentCombo.stage.id);
+  const data = combos[key];
+  const container = document.getElementById('docList');
+  container.innerHTML = "";
+  let rows = [];
+  const roles = activeRole ? ROLES.filter(r=>r.id===activeRole) : ROLES;
+  roles.forEach(role=>{
+    role.items.forEach((name, idx)=>{
+      rows.push({role, idx, name, item: data[role.id][idx]});
+    });
+  });
+
+  const dq = docQuery.trim();
+  if(dq) rows = rows.filter(r => r.name.includes(dq));
+  if(activeFilter !== "all"){
+    rows = rows.filter(r=> docStatus(r.item) === activeFilter);
+  }
+
+  document.getElementById('emptyState').classList.toggle('hidden', rows.length>0);
+
+  rows.forEach(r=>{
+    const st = docStatus(r.item);
+    const card = document.createElement('div');
+    card.className = 'doc-card';
+    card.innerHTML = `
+      ${st==='final' ? stampSVG() : ''}
+      <div class="doc-head">
+        <div>
+          <div class="doc-role">${r.role.name}</div>
+          <div class="doc-name">${r.name}</div>
+        </div>
+        ${statusBadge(st)}
+      </div>
+      <div class="stages"></div>
+      <div class="meta-row">
+        <label>من رفع: <input type="text" data-field="uploadedBy" placeholder="الاسم" value="${r.item.uploadedBy||''}"></label>
+        <label>تاريخ الرفع: <input type="text" data-field="uploadedDate" placeholder="YYYY-MM-DD" value="${r.item.uploadedDate||''}"></label>
+      </div>
+    `;
+    const stagesEl = card.querySelector('.stages');
+    STAGE_LABELS.forEach((label, sIdx)=>{
+      const btn = document.createElement('div');
+      const done = r.item.stages[sIdx];
+      const locked = sIdx>0 && !r.item.stages[sIdx-1];
+      btn.className = 'stage-btn' + (done?' done':'') + (locked?' locked':'');
+      btn.innerHTML = `<b>${sIdx+1}</b>${label}`;
+      btn.onclick = ()=>{
+        if(locked && !done) return;
+        r.item.stages[sIdx] = !r.item.stages[sIdx];
+        if(!r.item.stages[sIdx]){
+          for(let k=sIdx+1;k<3;k++) r.item.stages[k]=false;
+        }
+        saveCombo(key);
+        renderDetail();
+      };
+      stagesEl.appendChild(btn);
+    });
+    card.querySelectorAll('.meta-row input').forEach(inp=>{
+      inp.oninput = ()=>{
+        r.item[inp.dataset.field] = inp.value;
+        saveCombo(key);
+      };
+    });
+    container.appendChild(card);
+  });
+}
+
+document.getElementById('roleSearch').addEventListener('input', e=>{ roleQuery = e.target.value; renderSidebar(); });
+document.getElementById('docSearch').addEventListener('input', e=>{ docQuery = e.target.value; renderDocs(); });
+document.querySelectorAll('.chip').forEach(chip=>{
+  chip.addEventListener('click', ()=>{
+    document.querySelectorAll('.chip').forEach(c=>c.classList.remove('active'));
+    chip.classList.add('active');
+    activeFilter = chip.dataset.filter;
+    renderDocs();
+  });
+});
+
+(async ()=>{
+  await loadAll();
+  renderOverview();
+})();
+</script>
+</body>
+</html>
